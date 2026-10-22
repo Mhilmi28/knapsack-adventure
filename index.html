@@ -1,0 +1,130 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Knapsack Adventure</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="logo">
+        <span>🎒</span>
+        <div>
+          <h1>Knapsack Adventure</h1>
+          <p>Choose wisely, adventurer!</p>
+        </div>
+      </div>
+      <div class="capacity-card">
+        <span>🎒 Kapasitas Tas</span>
+        <strong id="capacityLabel">30 kg</strong>
+      </div>
+    </header>
+
+    <section id="setupPanel" class="setup-panel">
+      <h2>Mulai Petualanganmu!</h2>
+      <p>Masukkan nama dan pilih tingkat kesulitan.</p>
+      <form id="setupForm">
+        <label for="playerName">Nama pemain</label>
+        <input id="playerName" maxlength="24"
+          placeholder="Nama kamu" required>
+
+        <label for="level">Level permainan</label>
+        <select id="level">
+          <option value="easy">Easy — 10 barang, 30 kg</option>
+          <option value="medium">Medium — 25 barang, 100 kg</option>
+          <option value="hard">Hard — 50 barang, 100 kg</option>
+        </select>
+
+        <button class="primary" type="submit">🚀 Mulai Game</button>
+      </form>
+    </section>
+
+    <section id="gamePanel" hidden>
+      <div class="toolbar">
+        <div>
+          <strong id="playerLabel">Pemain</strong>
+          <span id="levelLabel"></span>
+        </div>
+        <div class="toolbar-actions">
+          <button id="manualButton" class="secondary">☝️ Manual</button>
+          <button id="autoButton" class="secondary">⚙️ Greedy Otomatis</button>
+          <button id="newGameButton" class="secondary">🔄 Game Baru</button>
+        </div>
+      </div>
+
+      <div class="game-layout">
+        <section class="panel">
+          <div class="panel-heading">
+            <h2>🍬 Daftar Barang</h2>
+            <span id="itemCount">0 barang</span>
+          </div>
+          <p class="help">
+            Pilih barang yang ingin dimasukkan ke tas.
+            Setiap barang hanya dapat dipilih satu kali.
+          </p>
+          <div id="itemsGrid" class="items-grid"></div>
+        </section>
+
+        <section class="panel backpack-panel">
+          <h2>🎒 Isi Ransel</h2>
+          <div id="bagItems" class="bag-items">
+            <p class="empty">Tas masih kosong. Pilih barang terlebih dahulu.</p>
+          </div>
+
+          <div class="stat">
+            <span>Total berat</span>
+            <strong><span id="totalWeight">0</span> kg</strong>
+          </div>
+          <div class="progress-track">
+            <div id="weightProgress" class="progress-fill"></div>
+          </div>
+          <div class="stat">
+            <span>Sisa kapasitas</span>
+            <strong><span id="remainingCapacity">30</span> kg</strong>
+          </div>
+          <div class="stat profit-stat">
+            <span>🪙 Total profit</span>
+            <strong id="totalProfit">0.00</strong>
+          </div>
+
+          <button id="finishButton" class="primary full-width">
+            🏆 Periksa Hasil
+          </button>
+          <button id="resetButton" class="danger full-width">
+            Kosongkan Tas
+          </button>
+        </section>
+      </div>
+
+      <section class="panel result-panel">
+        <h2>📜 Informasi Permainan</h2>
+        <p id="statusMessage" aria-live="polite">
+          Pilih barang atau jalankan mode Greedy.
+        </p>
+        <div class="result-grid">
+          <div>
+            <span>Profit optimal (DP)</span>
+            <strong id="optimalProfit">—</strong>
+          </div>
+          <div>
+            <span>Selisih dari optimal</span>
+            <strong id="profitGap">—</strong>
+          </div>
+        </div>
+        <h3>Log algoritma</h3>
+        <ol id="algorithmLog">
+          <li>Belum ada algoritma yang dijalankan.</li>
+        </ol>
+      </section>
+    </section>
+
+    <footer>
+      Knapsack Adventure · Proyek Strategi Algoritma
+    </footer>
+  </main>
+</body>
+</html>
