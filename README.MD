@@ -1,42 +1,54 @@
 
 # Knapsack Adventure
 
-Game edukasi untuk proyek mata kuliah Strategi Algoritma.
-Pemain memilih barang ke dalam tas dengan kapasitas terbatas
-untuk mendapatkan profit maksimum.
+Game edukasi untuk mempelajari masalah 0/1 Knapsack menggunakan JavaScript.
 
 ## Teknologi
 - HTML
 - CSS
-- JavaScript ES Modules
+- JavaScript
 
-## Cara menjalankan
-1. Buka folder proyek di Visual Studio Code.
-2. Pasang ekstensi Live Server jika belum tersedia.
-3. Klik kanan `index.html`.
-4. Pilih **Open with Live Server**.
-5. Game akan terbuka di browser.
+## Fitur
+- Akun pemain lokal berbasis localStorage
+- Level Easy, Medium, dan Hard
+- Pemilihan barang secara Manual
+- Algoritma Greedy by Profit
+- Dynamic Programming untuk profit optimal
+- Trophy berdasarkan pencapaian profit
+- Laporan algoritma dan cetak PDF
 
-## Aturan level
-- Easy: 10 barang, kapasitas 30 kg.
-- Medium: 25 barang, kapasitas 100 kg.
-- Hard: 50 barang, kapasitas 100 kg.
+## Konfigurasi Level
 
-Setiap barang mempunyai berat integer dan profit desimal.
-Setiap barang hanya boleh dipilih satu kali.
+| Level | Jumlah barang | Kapasitas |
+|---|---:|---:|
+| Easy | 10 | 30 kg |
+| Medium | 25 | 50 kg |
+| Hard | 50 | 100 kg |
+
+## Cara Menjalankan
+1. Buka folder proyek di VS Code.
+2. Pastikan struktur folder dan nama file sesuai.
+3. Jalankan `index.html` menggunakan browser atau ekstensi Live Server.
+4. Buat nama akun pemain.
+5. Pilih level, lalu mulai bermain.
 
 ## Algoritma
-- Greedy by Profit: mengurutkan barang dari profit terbesar,
-  lalu mengambil barang yang masih muat.
-- Dynamic Programming: menghitung profit optimal untuk
-  membandingkan hasil pilihan pemain dan Greedy.
 
-Greedy by Profit tidak selalu menghasilkan solusi optimal
-untuk masalah 0/1 Knapsack.
+### Greedy by Profit
+Barang diurutkan berdasarkan profit terbesar terlebih dahulu. Barang
+diambil jika masih muat dalam kapasitas tas.
 
-## Struktur modul
-- `items.js`: konfigurasi level dan generator barang.
-- `algorithms.js`: Greedy dan Dynamic Programming.
-- `game.js`: state dan aturan permainan.
-- `main.js`: interaksi antarmuka.
-- `style.css`: desain visual.
+Kompleksitas waktu: O(n log n).
+
+### Dynamic Programming
+DP[i][c] menyimpan profit maksimum dari i barang pertama dengan
+kapasitas c.
+
+Kompleksitas waktu: O(n × C).
+Kompleksitas ruang: O(n × C).
+
+## Catatan
+Akun hanya disimpan di browser. Proyek ini belum menggunakan server,
+database, autentikasi sungguhan, atau sinkronisasi antarperangkat.
+
+Data barang diacak setiap kali permainan baru dimulai.

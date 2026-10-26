@@ -1,294 +1,257 @@
 
-import { KnapsackGame } from "./game.js";
-import { getLevelConfig } from "./items.js";
-import { greedyByProfit } from "./algorithms.js";
+"use strict";
 
-const $ = id => document.getElementById(id);
-
-const setupPanel = $("setupPanel");
-const gamePanel = $("gamePanel");
-let game = null;
-let autoTimer = null;
-
-function formatProfit(value) {
-  return value.toFixed(2);
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[char]);
 }
 
-function stopAutoTimer() {
-  if (autoTimer !== null) {
-    clearInterval(autoTimer);
-    autoTimer = null;
+function buildReportHTML(data) {
+  const {
+    player,
+    level,
+    capacity,
+    items,
+    selectedItems,
+    manualProfit,
+    manualWeight,
+    mode,
+    greedyResult,
+    optimalResult
+  } = data;
+
+  const levelName = LEVEL_CONFIG[level].label;
+  const manualGap = Math.max(0, optimalResult.totalProfit - manualProfit);
+  const greedyGap = Math.max(0, optimalResult.totalProfit - greedyResult.totalProfit);
+
+  const greedyTrace = greedyResult.order.map(item => {
+    const taken = greedyResult.selected.some(entry => entry.id === item.id);
+
+    return `<li>Barang #${item.id}: ${taken ? "diambil" : "dilewati"} — berat ${item.weight} kg, profit ${formatMoney(item.profit)}.</li>`;
+  }).join("");
+
+  const tableRows = items.map(item => {
+    const chosen = selectedItems.some(entry => entry.id === item.id);
+
+    return `
+      <tr>
+        <td>${item.id}</td>
+        <td>${escapeHTML(item.name)}</td>
+        <td>${item.weight} kg</td>
+        <td>${formatMoney(item.profit)}</td>
+        <td>${chosen ? "Ya" : "Tidak"}</td>
+      </tr>
+    `;
+  }).join("");
+
+  return `
+    <section class="report-summary">
+      <h3>Informasi Sesi</h3>
+      <p><strong>Pemain:</strong> ${escapeHTML(player)}</p>
+      <p><strong>Level:</strong> ${levelName}</p>
+      <p><strong>Jumlah barang:</strong> ${items.length}</p>
+      <p><strong>Kapasitas tas:</strong> ${capacity} kg</p>
+      <p><strong>Mode saat laporan dibuka:</strong> ${escapeHTML(mode === "manual" ? "Manual" : "Automatic — Greedy by Profit")}</p>
+      <p><strong>Isi tas saat ini:</strong> ${selectedItems.length} barang, ${manualWeight} kg, profit ${formatMoney(manualProfit)}</p>
+      <p><strong>Profit Greedy:</strong> ${formatMoney(greedyResult.totalProfit)} dari ${greedyResult.selected.length} barang.</p>
+      <p><strong>Profit optimal DP:</strong> ${formatMoney(optimalResult.totalProfit)}</p>
+      <p><strong>Selisih profit tas saat ini terhadap optimal:</strong> ${formatMoney(manualGap)}</p>
+    </section>
+
+    <h3>1. Rumusan Masalah</h3>
+    <p>
+      Knapsack 0/1 adalah masalah memilih sekumpulan barang agar total berat
+      tidak melebihi kapasitas tas dan total profit sebesar mungkin. Setiap
+      barang hanya dapat diambil satu kali. Pada game ini berat barang berupa
+      bilangan bulat, sedangkan profit dapat berupa bilangan desimal.
+    </p>
+
+    <h3>2. Algoritma Greedy by Profit</h3>
+    <ol>
+      <li>Bangkitkan barang secara acak sesuai level yang dipilih.</li>
+      <li>Urutkan barang dari profit terbesar ke terkecil.</li>
+      <li>Periksa barang berdasarkan urutan tersebut.</li>
+      <li>Ambil barang jika beratnya masih muat; jika tidak, lewati.</li>
+      <li>Perbarui total berat dan profit setiap kali barang diproses.</li>
+    </ol>
+    <p>
+      Kompleksitas waktu Greedy adalah O(n log n), karena pengurutan
+      membutuhkan O(n log n) dan pemeriksaan barang membutuhkan O(n).
+    </p>
+
+    <h3>3. Dynamic Programming</h3>
+    <p>
+      Dynamic Programming digunakan untuk mencari profit optimal sebagai
+      pembanding. DP[i][c] menyimpan profit maksimum dari i barang pertama
+      dengan kapasitas c. Untuk setiap barang, algoritma membandingkan
+      pilihan mengambil barang dengan tidak mengambilnya.
+    </p>
+    <p>
+      Kompleksitas waktu implementasi tabel dua dimensi adalah O(n × C),
+      sedangkan kompleksitas ruangnya juga O(n × C). n adalah jumlah barang
+      dan C adalah kapasitas tas.
+    </p>
+
+    <h3>4. Hasil Perbandingan</h3>
+    <ul>
+      <li>Manual: profit ${formatMoney(manualProfit)}, berat ${manualWeight} kg.</li>
+      <li>Greedy: profit ${formatMoney(greedyResult.totalProfit)}, berat ${greedyResult.totalWeight} kg.</li>
+      <li>Dynamic Programming: profit optimal ${formatMoney(optimalResult.totalProfit)}, berat ${optimalResult.totalWeight} kg.</li>
+      <li>Selisih Greedy terhadap optimal: ${formatMoney(greedyGap)}.</li>
+    </ul>
+    <p>
+      Greedy by Profit tidak selalu menghasilkan solusi optimal untuk
+      Knapsack 0/1. Dynamic Programming memberikan nilai optimal untuk
+      membandingkan hasil pilihan pemain dan hasil Greedy.
+    </p>
+
+    <h3>5. Jejak Eksekusi Greedy</h3>
+    <p>Daftar pemeriksaan barang berdasarkan profit menurun:</p>
+    <ol>${greedyTrace}</ol>
+
+    <h3>6. Data Barang dan Pilihan Pemain</h3>
+    <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nama</th>
+            <th>Berat</th>
+            <th>Profit</th>
+            <th>Dipilih pemain</th>
+          </tr>
+        </thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+    </div>
+
+    <h3>7. Parameter Level</h3>
+    <ul>
+      <li>Easy: 10 barang, kapasitas 30 kg.</li>
+      <li>Medium: 25 barang, kapasitas 50 kg.</li>
+      <li>Hard: 50 barang, kapasitas 100 kg.</li>
+    </ul>
+
+    <h3>8. Kesimpulan</h3>
+    <p>
+      Game ini menerapkan masalah 0/1 Knapsack melalui pemilihan manual,
+      algoritma Greedy by Profit, dan Dynamic Programming. Hasil pengujian
+      dapat digunakan untuk mengamati perbedaan antara strategi yang cepat
+      dan solusi optimal. Nilai pada laporan mengikuti data acak pada sesi
+      yang sedang aktif.
+    </p>
+
+    <p><strong>Nama anggota:</strong> __________________________________</p>
+    <p><strong>Kelas:</strong> __________________ <strong>Tanggal:</strong> __________________</p>
+  `;
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const $ = id => document.getElementById(id);
+
+  const accountScreen = $("accountScreen");
+  const homeScreen = $("homeScreen");
+  const gameScreen = $("gameScreen");
+
+  const STORAGE_PLAYER = "knapsackAdventurePlayer";
+  const STORAGE_LEVEL = "knapsackAdventureLevel";
+
+  function showScreen(screen) {
+    accountScreen.classList.add("hidden");
+    homeScreen.classList.add("hidden");
+    gameScreen.classList.add("hidden");
+
+    screen.classList.remove("hidden");
   }
-}
 
-function setStatus(message) {
-  $("statusMessage").textContent = message;
-}
-
-function renderGame() {
-  if (!game) return;
-
-  const totals = game.getTotals();
-  const selectedItems = game.getSelectedItems();
-
-  $("playerLabel").textContent = `👤 Pemain: ${game.playerName}`;
-  $("levelLabel").textContent =
-    `Level: ${game.level[0].toUpperCase()}${game.level.slice(1)}`;
-  $("capacityLabel").textContent = `${game.capacity} kg`;
-  $("itemCount").textContent = `${game.items.length} barang`;
-  $("totalWeight").textContent = totals.weight;
-  $("remainingCapacity").textContent = game.capacity - totals.weight;
-  $("totalProfit").textContent = formatProfit(totals.profit);
-  $("weightProgress").style.width =
-    `${Math.min(100, totals.weight / game.capacity * 100)}%`;
-
-  $("itemsGrid").replaceChildren();
-
-  for (const item of game.items) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "item-card";
-    button.classList.toggle(
-      "selected",
-      game.selectedIds.has(item.id)
-    );
-    button.disabled = game.finished || game.mode === "auto";
-
-    const icon = document.createElement("span");
-    icon.className = "item-icon";
-    icon.textContent = item.icon;
-
-    const name = document.createElement("span");
-    name.className = "item-name";
-    name.textContent = `#${item.id} ${item.name}`;
-
-    const weight = document.createElement("small");
-    weight.textContent = `⚖ ${item.weight} kg`;
-
-    const profit = document.createElement("small");
-    profit.textContent = `🪙 ${formatProfit(item.profit)}`;
-
-    button.append(icon, name, weight, profit);
-    button.addEventListener("click", () => {
-      const result = game.toggleItem(item.id);
-      setStatus(result.message);
-      renderGame();
-    });
-
-    $("itemsGrid").append(button);
+  function getSavedPlayer() {
+    return localStorage.getItem(STORAGE_PLAYER) || "";
   }
 
-  $("bagItems").replaceChildren();
+  function showHome() {
+    const player = getSavedPlayer();
 
-  if (selectedItems.length === 0) {
-    const empty = document.createElement("p");
-    empty.className = "empty";
-    empty.textContent = "Tas masih kosong. Pilih barang terlebih dahulu.";
-    $("bagItems").append(empty);
-  } else {
-    for (const item of selectedItems) {
-      const card = document.createElement("div");
-      card.className = "bag-item";
-
-      const icon = document.createElement("span");
-      icon.className = "item-icon";
-      icon.textContent = item.icon;
-
-      const name = document.createElement("small");
-      name.textContent = `#${item.id}`;
-
-      const weight = document.createElement("small");
-      weight.textContent = `${item.weight} kg`;
-
-      const profit = document.createElement("small");
-      profit.textContent = `🪙 ${formatProfit(item.profit)}`;
-
-      card.append(icon, name, weight, profit);
-      $("bagItems").append(card);
-    }
-  }
-
-  $("manualButton").disabled = game.finished;
-  $("autoButton").disabled = game.finished;
-  $("resetButton").disabled = game.finished;
-  $("finishButton").disabled = game.finished || game.mode === "auto";
-}
-
-function renderAlgorithmLog(lines) {
-  const list = $("algorithmLog");
-  list.replaceChildren();
-
-  if (lines.length === 0) {
-    const li = document.createElement("li");
-    li.textContent = "Belum ada algoritma yang dijalankan.";
-    list.append(li);
-    return;
-  }
-
-  for (const line of lines) {
-    const li = document.createElement("li");
-    li.textContent = line;
-    list.append(li);
-  }
-}
-
-function updateComparison() {
-  const totals = game.getTotals();
-  const optimal = game.getOptimalProfit();
-
-  $("optimalProfit").textContent = formatProfit(optimal);
-  $("profitGap").textContent =
-    formatProfit(Math.max(0, optimal - totals.profit));
-}
-
-function startGame(level, playerName) {
-  stopAutoTimer();
-
-  game = new KnapsackGame(level, playerName);
-  setupPanel.hidden = true;
-  gamePanel.hidden = false;
-
-  renderAlgorithmLog([]);
-  updateComparison();
-  renderGame();
-  setStatus("Game dimulai! Pilih barang atau jalankan Greedy.");
-}
-
-function runAutomaticMode() {
-  if (!game || game.finished) return;
-
-  stopAutoTimer();
-
-  const result = greedyByProfit(game.items, game.capacity);
-  const sorted = [...game.items].sort(
-    (a, b) => b.profit - a.profit || a.weight - b.weight
-  );
-
-  game.mode = "auto";
-  game.selectedIds.clear();
-
-  let index = 0;
-  let currentWeight = 0;
-  let currentProfit = 0;
-  const logs = [];
-
-  renderGame();
-  renderAlgorithmLog([]);
-  setStatus("Greedy mulai memeriksa barang berdasarkan profit terbesar...");
-
-  autoTimer = setInterval(() => {
-    if (index >= sorted.length) {
-      stopAutoTimer();
-      game.finished = true;
-      renderGame();
-      updateComparison();
-
-      const optimal = game.getOptimalProfit();
-      const totals = game.getTotals();
-      const isOptimal = Math.abs(totals.profit - optimal) < 0.005;
-
-      setStatus(
-        `Greedy selesai. Profit ${formatProfit(totals.profit)}. ` +
-        (isOptimal
-          ? "🏆 Hasil mencapai profit optimal!"
-          : `Profit optimal adalah ${formatProfit(optimal)}.`)
-      );
+    if (!player) {
+      showScreen(accountScreen);
+      $("accountName").focus();
       return;
     }
 
-    const item = sorted[index++];
-    const remaining = game.capacity - currentWeight;
+    $("homePlayerName").textContent = player;
 
-    if (item.weight <= remaining) {
-      game.selectedIds.add(item.id);
-      currentWeight += item.weight;
-      currentProfit += item.profit;
+    const savedLevel = localStorage.getItem(STORAGE_LEVEL) || "easy";
+    $("levelSelect").value = LEVEL_CONFIG[savedLevel]
+      ? savedLevel
+      : "easy";
 
-      logs.push(
-        `#${item.id} diambil — berat ${item.weight} kg, ` +
-        `profit ${formatProfit(item.profit)}.`
-      );
-    } else {
-      logs.push(
-        `#${item.id} dilewati — berat ${item.weight} kg, ` +
-        `sisa kapasitas ${remaining} kg.`
-      );
+    showScreen(homeScreen);
+  }
+
+  $("accountForm").addEventListener("submit", event => {
+    event.preventDefault();
+
+    const name = $("accountName").value.trim();
+
+    if (!name) {
+      $("accountName").focus();
+      return;
     }
 
-    renderGame();
-    renderAlgorithmLog(logs);
-    updateComparison();
+    localStorage.setItem(STORAGE_PLAYER, name);
 
-    setStatus(
-      `Greedy memeriksa barang ${index}/${sorted.length}. ` +
-      `Total berat ${currentWeight} kg, profit ${formatProfit(currentProfit)}.`
-    );
-  }, 350);
-}
+    if (!localStorage.getItem(STORAGE_LEVEL)) {
+      localStorage.setItem(STORAGE_LEVEL, "easy");
+    }
 
-$("setupForm").addEventListener("submit", event => {
-  event.preventDefault();
+    showHome();
+  });
 
-  const playerName = $("playerName").value.trim();
+  $("levelSelect").addEventListener("change", () => {
+    localStorage.setItem(STORAGE_LEVEL, $("levelSelect").value);
+  });
 
-  if (!playerName) {
-    $("playerName").focus();
-    return;
+  $("playBtn").addEventListener("click", () => {
+    const player = getSavedPlayer();
+    const level = $("levelSelect").value;
+
+    if (!player) {
+      showScreen(accountScreen);
+      return;
+    }
+
+    if (!LEVEL_CONFIG[level]) {
+      return;
+    }
+
+    localStorage.setItem(STORAGE_LEVEL, level);
+
+    Game.startNewGame(level, player);
+    showScreen(gameScreen);
+  });
+
+  function logout() {
+    Game.stopAuto();
+
+    localStorage.removeItem(STORAGE_PLAYER);
+    localStorage.removeItem(STORAGE_LEVEL);
+
+    $("accountName").value = "";
+    showScreen(accountScreen);
   }
 
-  startGame($("level").value, playerName);
-});
+  $("logoutHomeBtn").addEventListener("click", logout);
+  $("logoutGameBtn").addEventListener("click", logout);
 
-$("manualButton").addEventListener("click", () => {
-  if (!game || game.finished) return;
+  Game.bindEvents();
 
-  stopAutoTimer();
-  game.mode = "manual";
-  renderGame();
-  setStatus("Mode Manual aktif. Klik barang untuk memilih atau mengeluarkannya.");
-});
-
-$("autoButton").addEventListener("click", runAutomaticMode);
-
-$("resetButton").addEventListener("click", () => {
-  if (!game || game.finished) return;
-
-  stopAutoTimer();
-  game.resetBag();
-  renderAlgorithmLog([]);
-  renderGame();
-  updateComparison();
-  setStatus("Tas dikosongkan. Silakan pilih barang lagi.");
-});
-
-$("finishButton").addEventListener("click", () => {
-  if (!game || game.finished) return;
-
-  const result = game.finishManual();
-  if (!result) return;
-
-  renderGame();
-  updateComparison();
-
-  if (result.isOptimal) {
-    setStatus(
-      `🏆 Hebat, ${game.playerName}! Profit ${formatProfit(result.profit)} ` +
-      "adalah profit optimal. Kamu mendapatkan Trophy!"
-    );
+  if (getSavedPlayer()) {
+    showHome();
   } else {
-    setStatus(
-      `Permainan selesai. Profit kamu ${formatProfit(result.profit)}, ` +
-      `sedangkan profit optimal ${formatProfit(result.optimalProfit)}. ` +
-      "Coba strategi pilihan yang berbeda pada game baru."
-    );
+    showScreen(accountScreen);
   }
-});
-
-$("newGameButton").addEventListener("click", () => {
-  stopAutoTimer();
-  setupPanel.hidden = false;
-  gamePanel.hidden = true;
-  $("playerName").value = game?.playerName ?? "";
-  $("level").value = game?.level ?? "easy";
-  $("playerName").focus();
 });

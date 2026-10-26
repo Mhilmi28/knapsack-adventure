@@ -4,127 +4,246 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Game edukasi algoritma 0/1 Knapsack dengan Greedy dan Dynamic Programming.">
   <title>Knapsack Adventure</title>
   <link rel="stylesheet" href="css/style.css">
-  <script type="module" src="js/main.js"></script>
+  <script src="js/items.js" defer></script>
+  <script src="js/algorithms.js" defer></script>
+  <script src="js/game.js" defer></script>
+  <script src="js/main.js" defer></script>
 </head>
 <body>
-  <main class="app">
-    <header class="topbar">
-      <div class="logo">
-        <span>🎒</span>
-        <div>
-          <h1>Knapsack Adventure</h1>
-          <p>Choose wisely, adventurer!</p>
-        </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <main id="app">
+    <!-- HALAMAN AKUN -->
+    <section id="accountScreen" class="screen center-screen">
+      <div class="panel welcome-panel">
+        <div class="mascot">🎒🍬🌟</div>
+        <h1>Knapsack Adventure</h1>
+        <p>Buat nama petualangmu dan mulai mengumpulkan profit!</p>
+
+        <form id="accountForm">
+          <label for="accountName">Nama pemain</label>
+          <input
+            id="accountName"
+            type="text"
+            maxlength="24"
+            placeholder="Masukkan nama kamu"
+            autocomplete="nickname"
+            required
+          >
+          <button class="primary-btn full-width" type="submit">
+            ✨ Buat Akun
+          </button>
+        </form>
+
+        <p class="small-note">
+          Prototipe ini menyimpan nama di browser, bukan akun server.
+        </p>
       </div>
-      <div class="capacity-card">
-        <span>🎒 Kapasitas Tas</span>
-        <strong id="capacityLabel">30 kg</strong>
-      </div>
-    </header>
-
-    <section id="setupPanel" class="setup-panel">
-      <h2>Mulai Petualanganmu!</h2>
-      <p>Masukkan nama dan pilih tingkat kesulitan.</p>
-      <form id="setupForm">
-        <label for="playerName">Nama pemain</label>
-        <input id="playerName" maxlength="24"
-          placeholder="Nama kamu" required>
-
-        <label for="level">Level permainan</label>
-        <select id="level">
-          <option value="easy">Easy — 10 barang, 30 kg</option>
-          <option value="medium">Medium — 25 barang, 100 kg</option>
-          <option value="hard">Hard — 50 barang, 100 kg</option>
-        </select>
-
-        <button class="primary" type="submit">🚀 Mulai Game</button>
-      </form>
     </section>
 
-    <section id="gamePanel" hidden>
-      <div class="toolbar">
-        <div>
-          <strong id="playerLabel">Pemain</strong>
-          <span id="levelLabel"></span>
+    <!-- HALAMAN HOME -->
+    <section id="homeScreen" class="screen center-screen hidden">
+      <div class="panel home-panel">
+        <div class="mascot">🌲🍬🗺️</div>
+        <h1>Knapsack Adventure</h1>
+        <p class="lead">
+          Atur isi ransel, cari profit terbesar, dan buktikan strategi terbaikmu!
+        </p>
+
+        <div class="feature-grid">
+          <article class="feature">
+            <span>🎒</span>
+            <h3>Atur Ransel</h3>
+            <p>Jangan sampai melewati kapasitas.</p>
+          </article>
+          <article class="feature">
+            <span>🧠</span>
+            <h3>Uji Strategi</h3>
+            <p>Bandingkan Manual dan Greedy.</p>
+          </article>
+          <article class="feature">
+            <span>🏆</span>
+            <h3>Kejar Trophy</h3>
+            <p>Bandingkan profit dengan hasil optimal.</p>
+          </article>
         </div>
-        <div class="toolbar-actions">
-          <button id="manualButton" class="secondary">☝️ Manual</button>
-          <button id="autoButton" class="secondary">⚙️ Greedy Otomatis</button>
-          <button id="newGameButton" class="secondary">🔄 Game Baru</button>
+
+        <div class="account-strip">
+          <div>
+            <span class="eyebrow">AKUN AKTIF</span>
+            <strong id="homePlayerName">Petualang</strong>
+          </div>
+          <button id="logoutHomeBtn" class="danger-btn" type="button">
+            Logout
+          </button>
         </div>
+
+        <label for="levelSelect">Pilih level permainan</label>
+        <select id="levelSelect">
+          <option value="easy">Easy — 10 barang · 30 kg</option>
+          <option value="medium">Medium — 25 barang · 50 kg</option>
+          <option value="hard">Hard — 50 barang · 100 kg</option>
+        </select>
+
+        <button id="playBtn" class="primary-btn full-width" type="button">
+          🚀 Mulai Petualangan
+        </button>
+      </div>
+    </section>
+
+    <!-- HALAMAN GAME -->
+    <section id="gameScreen" class="screen hidden">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-icon">🎒</span>
+          <div>
+            <h1>Knapsack Adventure</h1>
+            <p>Choose wisely, adventurer!</p>
+          </div>
+        </div>
+
+        <div class="top-actions">
+          <button id="manualBtn" class="mode-btn active" type="button">
+            ☝️ Manual
+          </button>
+          <button id="autoBtn" class="mode-btn" type="button">
+            ⚙️ Automatic
+          </button>
+          <button id="reportBtn" class="mode-btn" type="button">
+            📘 Laporan
+          </button>
+          <button id="logoutGameBtn" class="danger-btn" type="button">
+            Logout
+          </button>
+        </div>
+      </header>
+
+      <div class="game-meta">
+        <div>👤 Pemain: <strong id="playerLabel">Petualang</strong></div>
+        <div>🏆 Level: <strong id="levelLabel">Easy</strong></div>
+        <div>🎒 Kapasitas: <strong id="capacityLabel">30 kg</strong></div>
+        <div>🕹️ Mode: <strong id="modeLabel">Manual</strong></div>
       </div>
 
       <div class="game-layout">
-        <section class="panel">
-          <div class="panel-heading">
-            <h2>🍬 Daftar Barang</h2>
-            <span id="itemCount">0 barang</span>
+        <section class="panel inventory-panel">
+          <div class="section-heading">
+            <div>
+              <h2>Daftar Barang</h2>
+              <p id="itemCountLabel">10 barang tersedia</p>
+            </div>
+            <span class="pill">🍬 Inventory</span>
           </div>
-          <p class="help">
-            Pilih barang yang ingin dimasukkan ke tas.
-            Setiap barang hanya dapat dipilih satu kali.
+
+          <div class="toolbar">
+            <label>
+              Filter
+              <select id="filterSelect">
+                <option value="all">Semua</option>
+                <option value="available">Belum dipilih</option>
+                <option value="selected">Di dalam tas</option>
+              </select>
+            </label>
+
+            <label>
+              Urutkan
+              <select id="sortSelect">
+                <option value="id">ID barang</option>
+                <option value="profit">Profit terbesar</option>
+                <option value="weight">Berat teringan</option>
+              </select>
+            </label>
+          </div>
+
+          <div id="itemGrid" class="item-grid"></div>
+          <p id="inventoryHint" class="hint">
+            Klik barang untuk memasukkannya ke tas.
           </p>
-          <div id="itemsGrid" class="items-grid"></div>
         </section>
 
-        <section class="panel backpack-panel">
-          <h2>🎒 Isi Ransel</h2>
-          <div id="bagItems" class="bag-items">
-            <p class="empty">Tas masih kosong. Pilih barang terlebih dahulu.</p>
+        <aside class="panel bag-panel">
+          <div class="bag-heading">
+            <span>🎒</span>
+            <div>
+              <h2>Ransel</h2>
+              <p id="bagCountLabel">0 barang dipilih</p>
+            </div>
           </div>
 
-          <div class="stat">
-            <span>Total berat</span>
-            <strong><span id="totalWeight">0</span> kg</strong>
-          </div>
-          <div class="progress-track">
-            <div id="weightProgress" class="progress-fill"></div>
-          </div>
-          <div class="stat">
-            <span>Sisa kapasitas</span>
-            <strong><span id="remainingCapacity">30</span> kg</strong>
-          </div>
-          <div class="stat profit-stat">
-            <span>🪙 Total profit</span>
-            <strong id="totalProfit">0.00</strong>
+          <div id="bagItems" class="bag-items"></div>
+
+          <div class="stats-card">
+            <div class="stat-line">
+              <span>Total berat</span>
+              <strong><span id="weightTotal">0</span> kg</strong>
+            </div>
+            <div class="progress-track">
+              <div id="weightBar" class="progress-fill"></div>
+            </div>
+            <p class="remaining-text">
+              Sisa kapasitas: <strong id="remainingWeight">30</strong> kg
+            </p>
+
+            <div class="stat-line profit-line">
+              <span>🪙 Total profit</span>
+              <strong id="profitTotal">0.00</strong>
+            </div>
           </div>
 
-          <button id="finishButton" class="primary full-width">
-            🏆 Periksa Hasil
-          </button>
-          <button id="resetButton" class="danger full-width">
-            Kosongkan Tas
-          </button>
-        </section>
+          <div class="trophy-card">
+            <span id="trophyIcon">🏆</span>
+            <div>
+              <strong id="trophyTitle">Trophy belum diperoleh</strong>
+              <p id="trophyDescription">Selesaikan permainan untuk melihat hasil.</p>
+            </div>
+          </div>
+
+          <div class="bag-actions">
+            <button id="resetBtn" class="danger-btn" type="button">
+              🗑 Reset Tas
+            </button>
+            <button id="finishBtn" class="primary-btn" type="button">
+              🏁 Selesai
+            </button>
+          </div>
+        </aside>
       </div>
 
-      <section class="panel result-panel">
-        <h2>📜 Informasi Permainan</h2>
-        <p id="statusMessage" aria-live="polite">
-          Pilih barang atau jalankan mode Greedy.
-        </p>
-        <div class="result-grid">
-          <div>
-            <span>Profit optimal (DP)</span>
-            <strong id="optimalProfit">—</strong>
-          </div>
-          <div>
-            <span>Selisih dari optimal</span>
-            <strong id="profitGap">—</strong>
-          </div>
-        </div>
-        <h3>Log algoritma</h3>
-        <ol id="algorithmLog">
-          <li>Belum ada algoritma yang dijalankan.</li>
-        </ol>
-      </section>
+      <div class="status-panel">
+        <strong id="gameStatus" role="status" aria-live="polite">
+          Pilih barang untuk memulai!
+        </strong>
+      </div>
     </section>
-
-    <footer>
-      Knapsack Adventure · Proyek Strategi Algoritma
-    </footer>
   </main>
+
+  <!-- MODAL LAPORAN -->
+  <div id="reportModal" class="modal-backdrop hidden">
+    <section class="panel report-panel" role="dialog" aria-modal="true"
+      aria-labelledby="reportTitle">
+      <div class="report-heading">
+        <div>
+          <span class="eyebrow">DOKUMENTASI ALGORITMA</span>
+          <h2 id="reportTitle">Laporan Knapsack Adventure</h2>
+        </div>
+        <button id="closeReportBtn" class="icon-btn" type="button"
+          aria-label="Tutup laporan">✕</button>
+      </div>
+
+      <div id="reportContent"></div>
+
+      <div class="report-actions">
+        <button id="printReportBtn" class="primary-btn" type="button">
+          🖨 Cetak / Simpan PDF
+        </button>
+        <button id="closeReportBottomBtn" class="secondary-btn" type="button">
+          Kembali ke game
+        </button>
+      </div>
+    </section>
+  </div>
 </body>
 </html>
